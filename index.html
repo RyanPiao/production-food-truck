@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Truck Simulation</title>
+    <style>
+        :root {
+            --bg-color: #FDF1D6;       /* Main background */
+            --box-bg: #FCEFC7;         /* Prep Time box background */
+            --dark-beige: #F9E2A8;     /* Darker accent */
+            --teal-btn: #00BFA5;       /* Action buttons */
+            --teal-hover: #008F7A;
+            --blue-border: #2D74DA;    /* Outlines */
+            --orange: #F5A623;
+            --text-dark: #333333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--text-dark);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .hidden { display: none !important; }
+        
+        /* --- 1. INTRO SCREEN --- */
+        .intro-card {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: left; /* Better for instructions */
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .intro-header { text-align: center; margin-bottom: 20px; }
+        .truck-illustration { font-size: 60px; display: block; margin-bottom: 10px; }
+        
+        .instruction-list {
+            background: #f9f9f9;
+            padding: 20px 30px;
+            border-radius: 10px;
+            border-left: 5px solid var(--teal-btn);
+            margin: 20px 0;
+        }
+        .instruction-list li { margin-bottom: 10px; line-height: 1.5; }
+
+        /* --- 2. GAME SCREEN --- */
+        .prod-bar-container { margin-bottom: 30px; text-align: center; }
+        .prod-label {
+            color: var(--blue-border);
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        .prod-bar {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            border: 2px solid var(--blue-border);
+            border-radius: 10px;
+            padding: 12px 40px;
+            background: rgba(255,255,255,0.5);
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--blue-border);
+            min-width: 300px;
+        }
+
+        .game-layout {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 40px;
+        }
+
+        /* Left Column: Prep Time */
+        .prep-box {
+            background-color: var(--dark-beige);
+            padding: 25px;
+            border-radius: 15px;
+            flex: 1;
+        }
+
+        .section-title {
+            color: var(--blue-border);
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            background: white;
+            border: 2px solid var(--blue-border);
+            border-radius: 8px;
+            overflow: hidden;
+            height: 55px;
+        }
+
+        .control-btn {
+            background: var(--teal-btn);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 100%;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .control-btn:hover { background: var(--teal-hover); }
+
+        .time-display {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--blue-border);
+            width: 100px;
+            text-align: center;
+        }
+
+        /* Right Column: Output */
+        .prepare-col { flex: 1; padding-top: 25px; }
+
+        .output-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            height: 55px;
+        }
+        
+        .food-icon { font-size: 35px; width: 50px; margin-right: 10px; }
+        
+        .output-display {
+            flex: 1;
+            height: 100%;
+            border: 2px solid var(--blue-border);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--blue-border);
+            background: white;
+        }
+
+        .action-btn {
+            background-color: var(--teal-btn);
+            color: white;
+            border: none;
+            padding: 18px 60px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 40px;
+            box-shadow: 0 4px 0 #008f7a;
+            width: 100%;
+            max-width: 400px;
+        }
+        .action-btn:hover { transform: translateY(2px); box-shadow: 0 2px 0 #008f7a; }
+
+        /* --- 3. MODALS --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        
+        .result-card {
+            background: var(--bg-color);
+            width: 500px;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            border: 5px solid white;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        }
+
+        .stats-table {
+            width: 100%;
+            margin: 20px 0;
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            border: 1px solid #ddd;
+        }
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 18px;
+        }
+        .stats-row:last-child { border-bottom: none; }
+
+        /* Status Bar at Bottom */
+        .status-bar {
+            position: fixed;
+            bottom: 0; left: 0; width: 100%;
+            background: #2C3E50;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: monospace;
+            box-sizing: border-box;
+            font-size: 18px;
+        }
+        
+        .timer-box {
+            font-weight: bold;
+            color: #F5A623;
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="screen-intro" class="container">
+    <div class="intro-card">
+        <div class="intro-header">
+            <span class="truck-illustration">🚚</span>
+            <h1 style="color: #333; margin: 0;">Food Truck Challenge</h1>
+        </div>
+        
+        <h3>How to Play:</h3>
+        <ul class="instruction-list">
+            <li>You have <strong>30 minutes</strong> of prep time each morning.</li>
+            <li>Use the <strong>[+]</strong> and <strong>[-]</strong> buttons to allocate time between Burgers and Fries.</li>
+            <li><strong>Goal:</strong> Sell "Combos". A Combo requires exactly <strong>1 Burger + 1 Fry</strong>.</li>
+            <li>Your production speed changes every round! Check the top bar.</li>
+            <li>You have <strong>2 Minutes</strong> to complete your decision.</li>
+        </ul>
+
+        <div style="text-align: center;">
+            <button class="action-btn" onclick="startGame()">Start Game</button>
+        </div>
+    </div>
+</div>
+
+<div id="screen-game" class="container hidden">
+    
+    <div class="prod-bar-container">
+        <div class="prod-label">Your Per Minute Production (Round <span id="round-num">1</span>/2):</div>
+        <div class="prod-bar">
+            <span><span id="rate-f">8</span> Fries</span>
+            <span style="font-size: 14px; color: #999;">-or-</span>
+            <span><span id="rate-b">4</span> Burgers</span>
+        </div>
+    </div>
+
+    <div class="game-layout">
+        <div class="prep-box">
+            <div class="section-title">Prep Time</div>
+            
+            <div class="input-group">
+                <button class="control-btn" onclick="adjustTime('burgers', -1)">-</button>
+                <div class="time-display"><span id="time-b">15</span> min</div>
+                <button class="control-btn" onclick="adjustTime('burgers', 1)">+</button>
+            </div>
+
+            <div class="input-group">
+                <button class="control-btn" onclick="adjustTime('fries', -1)">-</button>
+                <div class="time-display"><span id="time-f">15</span> min</div>
+                <button class="control-btn" onclick="adjustTime('fries', 1)">+</button>
+            </div>
+            
+            <p style="font-size: 14px; color: #555; text-align: center;">Total time must equal 30 min</p>
+        </div>
+
+        <div class="prepare-col">
+            <div class="section-title">Prepare</div>
+
+            <div class="output-row">
+                <div class="food-icon">🍔</div>
+                <div class="output-display" id="out-b">60</div>
+            </div>
+
+            <div class="output-row">
+                <div class="food-icon">🍟</div>
+                <div class="output-display" id="out-f">120</div>
+            </div>
+        </div>
+    </div>
+
+    <div style="text-align: center;">
+        <button class="action-btn" onclick="submitRound()">
+            Bring <span id="combo-count">60</span> Combos
+        </button>
+    </div>
+</div>
+
+<div id="modal-result" class="modal-overlay hidden">
+    <div class="result-card">
+        <h2 style="color: var(--teal-btn); margin-top:0;">Round Complete!</h2>
+        
+        <div class="stats-table">
+            <div class="stats-row">
+                <span>Your Combos:</span>
+                <strong style="color: var(--teal-btn);" id="res-score">0</strong>
+            </div>
+            <div class="stats-row">
+                <span>Optimal Possible:</span>
+                <span id="res-opt">0</span>
+            </div>
+        </div>
+        
+        <p id="res-msg" style="margin: 20px 0; color: #555; font-weight: bold;">Great work!</p>
+
+        <button class="action-btn" id="btn-next" onclick="nextRound()" style="padding: 10px 40px; font-size: 16px; width: auto;">Next Round >></button>
+    </div>
+</div>
+
+<div class="status-bar">
+    <div>Simulation Active</div>
+    <div class="timer-box">Time Remaining: <span id="timer">02:00</span></div>
+</div>
+
+<script>
+    // --- GAME STATE ---
+    const TOTAL_TIME_MINS = 30; // Production time
+    const ROUND_LIMIT_SEC = 120; // 2 minutes real time
+    const TOTAL_ROUNDS = 2;
+    
+    let currentRound = 1;
+    let timeBurgers = 15;
+    let timeFries = 15;
+    let rateB = 4;
+    let rateF = 8;
+
+    // Timer variables
+    let timerInterval;
+    let timeLeft = ROUND_LIMIT_SEC;
+
+    // --- INITIALIZATION ---
+    function startGame() {
+        document.getElementById('screen-intro').classList.add('hidden');
+        document.getElementById('screen-game').classList.remove('hidden');
+        setupRound();
+    }
+
+    function setupRound() {
+        // 1. Reset Time and Production
+        timeBurgers = 15;
+        timeFries = 15;
+
+        // 2. Randomize Productivity (Even numbers between 2 and 10)
+        // We use a loop to ensure rateB != rateF to keep the optimization interesting
+        do {
+            rateB = (Math.floor(Math.random() * 5) + 1) * 2; 
+            rateF = (Math.floor(Math.random() * 5) + 1) * 2;
+        } while (rateB === rateF);
+
+        // 3. Update UI Text
+        document.getElementById('round-num').innerText = currentRound;
+        document.getElementById('rate-b').innerText = rateB;
+        document.getElementById('rate-f').innerText = rateF;
+        
+        updateUI();
+
+        // 4. Start Countdown Timer
+        startTimer();
+    }
+
+    // --- TIMER LOGIC ---
+    function startTimer() {
+        timeLeft = ROUND_LIMIT_SEC;
+        updateTimerDisplay();
+        
+        clearInterval(timerInterval); // clear any existing
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            updateTimerDisplay();
+            
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                alert("Time's up! Submitting your current production.");
+                submitRound();
+            }
+        }, 1000);
+    }
+
+    function updateTimerDisplay() {
+        let minutes = Math.floor(timeLeft / 60);
+        let seconds = timeLeft % 60;
+        // Pad with leading zero
+        let mStr = minutes < 10 ? "0" + minutes : minutes;
+        let sStr = seconds < 10 ? "0" + seconds : seconds;
+        document.getElementById('timer').innerText = `${mStr}:${sStr}`;
+    }
+
+    // --- CORE GAME LOGIC ---
+    function adjustTime(item, amount) {
+        if (item === 'burgers') {
+            if (amount > 0 && timeFries > 0) {
+                timeBurgers++;
+                timeFries--;
+            } else if (amount < 0 && timeBurgers > 0) {
+                timeBurgers--;
+                timeFries++;
+            }
+        } else { // Item is fries
+            if (amount > 0 && timeBurgers > 0) {
+                timeFries++;
+                timeBurgers--;
+            } else if (amount < 0 && timeFries > 0) {
+                timeFries--;
+                timeBurgers++;
+            }
+        }
+        updateUI();
+    }
+
+    function updateUI() {
+        document.getElementById('time-b').innerText = timeBurgers;
+        document.getElementById('time-f').innerText = timeFries;
+
+        let prodB = timeBurgers * rateB;
+        let prodF = timeFries * rateF;
+        
+        document.getElementById('out-b').innerText = prodB;
+        document.getElementById('out-f').innerText = prodF;
+
+        let combos = Math.min(prodB, prodF);
+        document.getElementById('combo-count').innerText = combos;
+    }
+
+    // --- SCORING & RESULTS ---
+    function submitRound() {
+        clearInterval(timerInterval); // Stop timer
+
+        let finalScore = Math.min(timeBurgers * rateB, timeFries * rateF);
+        
+        // Calculate Optimal Score
+        let bestScore = 0;
+        for(let t=0; t<=30; t++) {
+            let s = Math.min(t*rateB, (30-t)*rateF);
+            if(s > bestScore) bestScore = s;
+        }
+
+        // POPULATE RESULTS (Rank Removed)
+        document.getElementById('res-score').innerText = finalScore;
+        document.getElementById('res-opt').innerText = bestScore;
+        
+        if(finalScore === bestScore) {
+            document.getElementById('res-msg').innerText = "Perfect! You maximized production.";
+            document.getElementById('res-msg').style.color = "green";
+        } else {
+            document.getElementById('res-msg').innerText = `You could have produced more (${bestScore}). Try to equate Burgers and Fries!`;
+            document.getElementById('res-msg').style.color = "#D35400";
+        }
+
+        document.getElementById('modal-result').classList.remove('hidden');
+
+        // Logic for "Finish Game" vs "Next Round"
+        let btn = document.getElementById('btn-next');
+        if(currentRound >= TOTAL_ROUNDS) {
+            btn.innerText = "Finish Game";
+            btn.onclick = function() { location.reload(); }; 
+        } else {
+            btn.innerText = "Next Round >>";
+            btn.onclick = nextRound;
+        }
+    }
+
+    function nextRound() {
+        document.getElementById('modal-result').classList.add('hidden');
+        currentRound++;
+        setupRound();
+    }
+
+</script>
+
+</body>
+</html>
